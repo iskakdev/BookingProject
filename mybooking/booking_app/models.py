@@ -30,6 +30,7 @@ class UserProfile(AbstractUser):
 
 
 class City(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
     city_image = models.ImageField(upload_to='city_photo/')
     city_name = models.CharField(max_length=32)
 
@@ -48,7 +49,7 @@ class Services(models.Model):
 class Hotel(models.Model):
     hotel_name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='cities')
     street = models.CharField(max_length=100)
     postal_code = models.PositiveSmallIntegerField()
     hotel_stars = models.PositiveSmallIntegerField(choices=[(i, str(i))for i in range(1,6)])
