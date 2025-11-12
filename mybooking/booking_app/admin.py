@@ -43,8 +43,14 @@ class ProductAdmin(TranslationAdmin):
         }
 
 
+class HotelImageInline(admin.TabularInline):
+    model = HotelImage
+    extra = 1
+
 @admin.register(Hotel)
 class ProductAdmin(TranslationAdmin):
+    inlines = [HotelImageInline]
+
     class Media:
         js = (
             'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
@@ -56,8 +62,14 @@ class ProductAdmin(TranslationAdmin):
         }
 
 
+class RoomImageInline(admin.TabularInline):
+    model = RoomImage
+    extra = 1
+
 @admin.register(Room)
 class ProductAdmin(TranslationAdmin):
+    inlines = [RoomImageInline]
+
     class Media:
         js = (
             'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
@@ -70,7 +82,5 @@ class ProductAdmin(TranslationAdmin):
 
 
 admin.site.register(UserProfile)
-admin.site.register(HotelImage)
-admin.site.register(RoomImage)
 admin.site.register(Review)
 admin.site.register(Booking)
