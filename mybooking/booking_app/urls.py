@@ -1,26 +1,24 @@
 from django.urls import path, include
-from .views import (CountryViewSet, UserProfileViewSet,
+from .views import (UserProfileListAPIView, UserProfileDetailAPIView,
                     CityListAPIView, CityDetailAPIView,
-                    ServicesViewSet, HotelListAPIView,
-                    HotelDetailAPIView, HotelImageViewSet,
-                    RoomViewSet, RoomImageViewSet, ReviewViewSet,
+                    HotelListAPIView,
+                    HotelDetailAPIView,
+                    RoomListAPIView, RoomDetailAPIView, ReviewViewSet,
                     BookingViewSet)
 from rest_framework import routers
 router = routers.SimpleRouter()
-router.register(r'countries', CountryViewSet)
-router.register(r'users', UserProfileViewSet)
-router.register(r'services', ServicesViewSet)
-router.register(r'hotel_images', HotelImageViewSet)
-router.register(r'rooms', RoomViewSet)
-router.register(r'room_images', RoomImageViewSet)
 router.register(r'reviews', ReviewViewSet)
 router.register(r'bookings', BookingViewSet)
 
 
 urlpatterns = [
+    path('', include(router.urls)),
     path('cities/', CityListAPIView.as_view(), name='city_list'),
     path('cities/<int:pk>/', CityDetailAPIView.as_view(), name='city_detail'),
     path('hotels/', HotelListAPIView.as_view(), name='hotels_list'),
     path('hotels/<int:pk>/', HotelDetailAPIView.as_view(), name='hotel_detail'),
-
+    path('rooms/', RoomListAPIView.as_view(), name='room_list'),
+    path('rooms/<int:pk>/', RoomDetailAPIView.as_view(), name='room_detail'),
+    path('users/', UserProfileListAPIView.as_view(), name='user_list'),
+    path('users/<int:pk>/', UserProfileDetailAPIView.as_view(), name='user_detail')
 ]
