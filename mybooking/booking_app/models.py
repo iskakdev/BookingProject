@@ -59,9 +59,19 @@ class Hotel(models.Model):
     def __str__(self):
         return self.hotel_name
 
+    def get_avg_rating(self):
+        reviews = self.hotel_reviews.all()
+        if reviews.exists():
+            return round(sum(i.rating for i in reviews) / reviews.count(), 1)
+        return 0
+
+    def get_count_people(self):
+        reviews = self.hotel_reviews.all()
+        return reviews.count()
+
 
 class HotelImage(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_images')
     hotel_image = models.ImageField(upload_to='hotel_images/')
 
     def __str__(self):
@@ -69,7 +79,7 @@ class HotelImage(models.Model):
 
 
 class Room(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_rooms')
     room_number = models.PositiveSmallIntegerField()
     price = models.PositiveSmallIntegerField()
     RoomTypeChoices = (
@@ -91,7 +101,7 @@ class Room(models.Model):
 
 
 class RoomImage(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='room_photos')
     room_image = models.ImageField(upload_to='room_images/')
 
     def __str__(self):
@@ -100,7 +110,7 @@ class RoomImage(models.Model):
 
 class Review(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_reviews')
     rating = models.PositiveSmallIntegerField(choices=[(i, str(i))for i in range(1,11)])
     comment = models.TextField()
     created_add = models.DateTimeField(auto_now_add=True)
