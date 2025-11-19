@@ -1,7 +1,43 @@
+from django.contrib.auth import authenticate
+
 from .models import (Country, UserProfile, City, Services,
                      Hotel, HotelImage, Room, RoomImage,
                      Review, Booking)
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['first_name', 'username', 'email', 'password', 'country']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = UserProfile.objects.create_user(**validated_data)
+        return user
+
+
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(**data)
+        if user and user.is_active:
+            return user
+        raise serializers.ValidationError("Неверные учетные данные")
+
+    def to_representation(self, instance):
+        refresh = RefreshToken.for_user(instance)
+        return {
+            'user': {
+                'username': instance.username,
+                'email': instance.email,
+            },
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -70,6 +106,12 @@ class HotelListSerializer(serializers.ModelSerializer):
                   'hotel_stars',]
 
 
+class HotelCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hotel
+        fields = '__all__'
+
+
 class CityDetailSerializer(serializers.ModelSerializer):
     cities = HotelListSerializer(many=True, read_only=True)
 
@@ -83,6 +125,12 @@ class RoomListSerializer(serializers.ModelSerializer):
         model = Room
         fields = ['id', 'room_number', 'price', 'room_type',
                   'room_status', 'description']
+
+
+class RoomCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = '__all__'
 
 
 class RoomImageSerializer(serializers.ModelSerializer):
@@ -107,6 +155,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['user', 'comment', 'created_add']
+
+
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
 
 
 class BookingSerializer(serializers.ModelSerializer):
