@@ -55,6 +55,7 @@ class Hotel(models.Model):
     hotel_stars = models.PositiveSmallIntegerField(choices=[(i, str(i))for i in range(1,6)])
     description = models.TextField()
     hotel_services = models.ManyToManyField(Services)
+    owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.hotel_name

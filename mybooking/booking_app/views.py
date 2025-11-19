@@ -5,12 +5,53 @@ from .serializers import (UserProfileListSerializer, UserProfileDetailSerializer
                           CityListSerializer, CityDetailSerializer,
                           HotelListSerializer,HotelDetailSerializer,
                           RoomListSerializer, RoomDetailSerializer,
-                          ReviewSerializer, BookingSerializer)
-from rest_framework import viewsets, generics
+                          ReviewCreateSerializer, BookingSerializer,
+                          HotelCreateSerializer, RoomCreateSerializer,
+                          UserRegisterSerializer, UserLoginSerializer)
+from rest_framework import viewsets, generics, status
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import HotelFilter, RoomFilter
 from .pagination import HotelPagination, RoomPagination
+from .permission import CheckRolePermission, CreateHotelPermission
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = UserRegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CustomLoginView(TokenObtainPairView):
+    serializer_class = UserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception:
+            return Response({"detail": "Неверные учетные данные"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = serializer.validated_data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LogoutView(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileListAPIView(generics.ListAPIView):
@@ -54,6 +95,15 @@ class HotelDetailAPIView(generics.RetrieveAPIView):
     serializer_class = HotelDetailSerializer
 
 
+class HotelViewSet(viewsets.ModelViewSet):
+    queryset = Hotel.objects.all()
+    serializer_class = HotelCreateSerializer
+    permission_classes = [CreateHotelPermission]
+
+    def get_queryset(self):
+        return Hotel.objects.filter(owner=self.request.user)
+
+
 class RoomListAPIView(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomListSerializer
@@ -69,11 +119,34 @@ class RoomDetailAPIView(generics.ListAPIView):
     serializer_class = RoomDetailSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class RoomViewSet(viewsets.ModelViewSet):
+    queryset = Room.objects.all()
+    serializer_class = RoomCreateSerializer
+    permission_classes = [CreateHotelPermission]
+
+
+class ReviewCreateAPIView(generics.CreateAPIView):
     queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
+    serializer_class = ReviewCreateSerializer
+    permission_classes = [CheckRolePermission]
+
+    def get_queryset(self):
+        return Room.objects.filter(owner=self.request.user)
+
+
+class ReviewEditAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewCreateSerializer
+    permission_classes = [CheckRolePermission]
+
+    def get_queryset(self):
+        return Review.objects.filter(user=self.request.user)
 
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+    permission_classes = [CheckRolePermission]
+
+    def get_queryset(self):
+        return Booking.objects.filter(user=self.request.user)
