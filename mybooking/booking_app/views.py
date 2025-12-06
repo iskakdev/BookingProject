@@ -131,7 +131,7 @@ class ReviewCreateAPIView(generics.CreateAPIView):
     permission_classes = [CheckRolePermission]
 
     def get_queryset(self):
-        return Room.objects.filter(owner=self.request.user)
+        return Review.objects.filter(user=self.request.user)
 
 
 class ReviewEditAPIView(generics.RetrieveUpdateDestroyAPIView):
